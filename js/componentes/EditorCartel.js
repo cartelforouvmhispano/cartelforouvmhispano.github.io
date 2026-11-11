@@ -262,7 +262,7 @@
           filename: nombre,
           image: { type: 'jpeg', quality: 0.98 },
           html2canvas: {
-            scale: 1.25, useCORS: true, backgroundColor: '#ffffff',
+            scale: 1.5, useCORS: true, backgroundColor: '#ffffff',
             windowWidth: 3402, scrollX: 0, scrollY: 0
           },
           jsPDF: {

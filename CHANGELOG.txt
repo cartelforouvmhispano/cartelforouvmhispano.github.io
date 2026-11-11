@@ -1,6 +1,7 @@
 2026-11-11:
   Committer: Autumn64
     - Cambio a librerías descargadas localmente para solucionar bloqueos de red causados por los CDN de las librerías remotas.
+    - Modificación de parámetro de escala de html2canvas (de 1.25 a 1.5).
 
 2026-11-10:
   Committer: Autumn64
