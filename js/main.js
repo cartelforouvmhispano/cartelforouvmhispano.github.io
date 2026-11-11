@@ -2,6 +2,9 @@
 (function () {
   'use strict';
   try {
+    if (userAgentString.indexOf("Safari") > -1) {
+      window.location.href="/safari-not-supported.html";
+    }
     const editor = new window.CartelUVM.EditorCartel();
     editor.iniciar();
 

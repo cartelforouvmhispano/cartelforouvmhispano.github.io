@@ -2,6 +2,7 @@
   Committer: Autumn64
     - Cambio a librerías descargadas localmente para solucionar bloqueos de red causados por los CDN de las librerías remotas.
     - Modificación de parámetro de escala de html2canvas (de 1.25 a 1).
+    - Adición de chequeo del UserAgent del usuario (Safari no está soportado debido a problemas de compatibilidad con la librería de PDF).
 
 2026-11-10:
   Committer: Autumn64
