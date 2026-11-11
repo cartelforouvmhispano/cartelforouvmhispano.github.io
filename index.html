@@ -1,0 +1,94 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Editor de cartel académico UVM con descarga directa de PDF.">
+  <title>Editor de Cartel | Foro de Investigación UVM</title>
+  <link rel="stylesheet" href="css/estilos.css?v=20261110-formats">
+
+  <!-- Orden de carga: configuración, servicios, editor y arranque.
+       Se utilizan scripts clásicos para funcionar también desde file:// en Chrome. -->
+  <script defer src="js/configuracion/campos.js?v=20261110-formats"></script>
+  <script defer src="js/configuracion/verticales.js?v=20261110-formats"></script>
+  <script defer src="js/configuracion/ConfiguracionURL.js?v=20261110-formats"></script>
+  <script defer src="js/configuracion/formatosAdicionales.js?v=20261110-formats"></script>
+  <script defer src="js/servicios/AjustadorTexto.js?v=20261110-formats"></script>
+  <script defer src="js/servicios/GestorBorradores.js?v=20261110-formats"></script>
+  <script defer src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+  <!-- SweetAlert2: ventana de seguimiento tras iniciar la descarga del PDF. -->
+  <script defer src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  <script defer src="js/servicios/AvisoDescarga.js?v=20261110-alerta"></script>
+  <script defer src="js/componentes/GestorImagenes.js?v=20261110-formats"></script>
+  <script defer src="js/componentes/EditorCartel.js?v=20261110-alerta"></script>
+  <script defer src="js/main.js?v=20261110-formats"></script>
+</head>
+<body>
+  <header class="barra-superior">
+    <div class="identidad">
+      <strong>Editor de Carteles UVM</strong>
+      <span>Foro de Investigación UVM Hispano</span>
+    </div>
+    <nav class="herramientas" aria-label="Herramientas del cartel">
+      <div class="controles-zoom" aria-label="Tamaño de vista">
+        <button id="alejar" class="boton boton-icono" type="button" title="Alejar" aria-label="Alejar">−</button>
+        <output id="zoom-valor" aria-label="Zoom actual">100%</output>
+        <button id="acercar" class="boton boton-icono" type="button" title="Acercar" aria-label="Acercar">+</button>
+      </div>
+      <button id="agregar-imagen" class="boton" type="button" aria-expanded="false" aria-controls="panel-imagenes">＋ Imágenes</button>
+      <button id="imprimir" class="boton boton-primario" type="button">Descargar PDF</button>
+      <button id="abrir-impresion" class="boton" type="button">Imprimir</button>
+      <button id="limpiar" class="boton" type="button">Limpiar</button>
+    </nav>
+  </header>
+
+  <main class="area-trabajo">
+    <div class="ayuda-rapida">
+      <p><strong>Haz clic dentro de cualquier cuadro del cartel para escribir.</strong></p>
+      <p id="estado" role="status" aria-live="polite">Preparando el cartel...</p>
+    </div>
+
+    <div id="zona-desplazamiento" class="zona-desplazamiento" aria-label="Cartel editable, con desplazamiento horizontal si se amplía">
+      <section id="cartel" class="cartel" aria-label="Cartel de investigación editable">
+        <img class="plantilla" src="recursos/plantilla.svg"
+             alt="Plantilla visual original del cartel con títulos y logotipos" draggable="false">
+        <div id="nombre-vertical" class="nombre-vertical" aria-label="Vertical académica"></div>
+        <!-- EditorCartel crea los encabezados temáticos y los 19 campos. -->
+      </section>
+    </div>
+    <aside id="panel-imagenes" class="panel-imagenes" aria-label="Configurar imagen" hidden>
+      <div class="panel-imagenes-cabecera">
+        <strong>Imágenes del cartel</strong>
+        <button id="imagen-cerrar" class="boton boton-icono" type="button" aria-label="Cerrar panel de imágenes">×</button>
+      </div>
+      <p class="panel-imagenes-ayuda">Agrega hasta cuatro imágenes por sección. El panel se coloca al lado del cartel para no cubrir tu trabajo. También puedes pegar imágenes con Ctrl + V o arrastrarlas a un cuadro de contenido.</p>
+      <label for="imagen-seccion">Sección</label>
+      <select id="imagen-seccion" class="entrada-imagen"></select>
+      <input id="imagen-archivo" type="file" accept="image/png,image/jpeg,image/webp" hidden>
+      <div class="imagen-acciones">
+        <button id="imagen-elegir" class="boton boton-primario" type="button">＋ Seleccionar imagen</button>
+        <span id="imagen-contador" class="imagen-contador" aria-live="polite">0 de 4 imágenes</span>
+      </div>
+      <label for="imagen-elemento">Figura que deseas editar</label>
+      <div class="figura-control">
+        <select id="imagen-elemento" class="entrada-imagen" disabled></select>
+        <button id="imagen-subir" class="boton boton-icono" type="button" title="Mover figura antes" aria-label="Mover figura antes" disabled>↑</button>
+        <button id="imagen-bajar" class="boton boton-icono" type="button" title="Mover figura después" aria-label="Mover figura después" disabled>↓</button>
+      </div>
+      <label for="imagen-distribucion">Ubicación de las imágenes respecto al texto</label>
+      <select id="imagen-distribucion" class="entrada-imagen" disabled>
+        <option value="derecha">A la derecha del texto</option>
+        <option value="izquierda">A la izquierda del texto</option>
+        <option value="abajo">Debajo del texto</option>
+      </select>
+      <label for="imagen-tamano">Espacio para imagen: <output id="imagen-tamano-valor">40%</output></label>
+      <input id="imagen-tamano" class="entrada-imagen" type="range" min="25" max="65" step="5" value="40" disabled>
+      <label for="imagen-pie">Pie de figura (opcional)</label>
+      <input id="imagen-pie" class="entrada-imagen" type="text" maxlength="220" placeholder="Figura 1. Resultados obtenidos" disabled>
+      <button id="imagen-eliminar" class="boton boton-peligro" type="button" disabled>Eliminar figura seleccionada</button>
+      <p id="imagen-estado" role="status" class="imagen-estado" aria-live="polite">Las imágenes se organizan automáticamente sin tapar el texto.</p>
+    </aside>
+    <p class="pie-ayuda">Tus cambios se guardan temporalmente en este navegador si el almacenamiento está disponible. Puedes agregar hasta cuatro imágenes por sección con <strong>＋ Imágenes</strong>, <strong>Ctrl + V</strong> o arrastrándolas al cuadro de texto. Al terminar utiliza <strong>Descargar PDF</strong> para guardar tu cartel, o <strong>Imprimir</strong> para enviarlo a una impresora.</p>
+  </main>
+</body>
+</html>

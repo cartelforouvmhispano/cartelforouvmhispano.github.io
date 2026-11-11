@@ -1,0 +1,351 @@
+/* ================================================================
+   ESTILOS DEL EDITOR DE CARTEL UVM
+   1. Interfaz del editor
+   2. Cartel y campos editables
+   3. Adaptación a pantalla pequeña
+   4. Salida para impresión (90 x 120 cm)
+   ================================================================ */
+
+:root {
+  font-family: Arial, Helvetica, sans-serif;
+  color: #253247;
+  background: #f1f4f8;
+  --rojo-uvm: #b61526;
+}
+* { box-sizing: border-box; }
+body { margin: 0; }
+button, textarea, select { font: inherit; }
+button { cursor: pointer; }
+
+/* 1. Interfaz de trabajo. No hay panel lateral. */
+.barra-superior {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 20px;
+  flex-wrap: wrap;
+  padding: 13px 22px;
+  background: white;
+  border-bottom: 1px solid #dbe2eb;
+}
+.identidad { display: grid; gap: 4px; }
+.identidad strong { font-size: 17px; }
+.identidad span { font-size: 12px; color: #64748b; }
+.herramientas { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; }
+.boton {
+  padding: 9px 12px;
+  border: 1px solid #c9d4e2;
+  border-radius: 7px;
+  background: white;
+  color: #253247;
+  font-size: 13px;
+  font-weight: 600;
+}
+.boton:hover { background: #f1f5fa; }
+.boton:focus-visible { outline: 3px solid #7baded; outline-offset: 2px; }
+.boton-primario { background: var(--rojo-uvm); border-color: var(--rojo-uvm); color: white; }
+.boton-primario:hover { background: #971020; }
+.controles-zoom { display: flex; align-items: center; border: 1px solid #dce3ec; border-radius: 7px; }
+.controles-zoom .boton { border: 0; padding: 8px 11px; }
+.controles-zoom output { min-width: 44px; text-align: center; font-size: 12px; font-variant-numeric: tabular-nums; }
+
+.area-trabajo { padding: 12px 20px 24px; }
+.ayuda-rapida { max-width: 1120px; margin: 0 auto 12px; display: flex; justify-content: space-between; flex-wrap: wrap; gap: 4px 20px; font-size: 12px; color: #526177; }
+.ayuda-rapida p { margin: 0; line-height: 1.6; }
+.ayuda-rapida strong { color: #263349; }
+.zona-desplazamiento { overflow: auto; padding: 12px; background: #d9e0e9; border: 1px solid #cbd5e2; border-radius: 11px; min-height: 360px; }
+.pie-ayuda { margin: 12px auto 0; max-width: 1120px; color: #67768b; font-size: 12px; line-height: 1.5; }
+
+/* 2. El cartel es un solo lienzo con campos colocados por porcentajes.
+      Los porcentajes de cada campo se definen en js/configuracion/campos.js. */
+.cartel {
+  position: relative;
+  width: min(1100px, calc(100vw - 70px));
+  aspect-ratio: 2550.96 / 3401.04;
+  margin: 0 auto;
+  background: white;
+  box-shadow: 0 2px 12px #0002;
+  overflow: hidden;
+  container-type: inline-size;
+  --color-vertical: #ABB8D3;
+}
+.plantilla { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; user-select: none; }
+/* Encabezados y nombre de vertical: superposición dinámica sobre el SVG base. */
+.nombre-vertical {
+  position: absolute;
+  left: 79%; top: 5.55%; width: 19%; height: 4.8%;
+  z-index: 2;
+  display: flex; align-items: center; justify-content: center;
+  background: white; color: var(--color-vertical);
+  text-align: center; white-space: pre-line; overflow-wrap: anywhere;
+  font-size: 2.05cqw; line-height: 1.05; font-weight: 700;
+}
+.encabezado-seccion {
+  position: absolute;
+  z-index: 2;
+  display: flex; align-items: center; justify-content: center;
+  padding: 0 0.35%;
+  background: var(--color-vertical);
+  color: white;
+  text-align: center;
+  font-size: 1.5cqw; font-weight: 700; white-space: nowrap;
+  -webkit-print-color-adjust: exact; print-color-adjust: exact;
+}
+
+.campo-editable, .texto-impresion {
+  position: absolute;
+  padding: 0;
+  margin: 0;
+  border-radius: 0;
+  line-height: 1.19;
+  letter-spacing: 0;
+  font-family: Arial, Helvetica, sans-serif;
+  color: #152033;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  word-break: normal;
+}
+.campo-editable {
+  resize: none;
+  border: 1px dashed rgba(42, 110, 201, .24);
+  background: rgba(226, 240, 255, .08);
+  outline: 0;
+  overflow: hidden;
+}
+.campo-editable:hover { background: rgba(226, 240, 255, .27); border-color: #5387c7; }
+.campo-editable:focus { background: rgba(226, 240, 255, .31); border: 1px solid #2269b4; z-index: 5; }
+.campo-editable.excedido { background: rgba(255, 224, 224, .5); border-color: #d93434; }
+/* El mismo texto se mide sin mostrarlo y se dibuja al imprimir. */
+.texto-impresion { visibility: hidden; pointer-events: none; overflow: hidden; }
+
+/* 3. Pantallas pequeñas: permite desplazarse por el cartel. */
+@media (max-width: 680px) {
+  .barra-superior { padding: 11px 12px; }
+  .herramientas { width: 100%; }
+  .area-trabajo { padding: 10px 6px; }
+  .zona-desplazamiento { padding: 5px; }
+  .pie-ayuda { padding: 0 6px; }
+}
+
+/* 4. Papel 90 x 120 cm: solo se imprime el cartel, sin controles. */
+@page { size: 900mm 1200mm; margin: 0; }
+@media print {
+  html, body { width: 900mm !important; height: 1200mm !important; margin: 0 !important; padding: 0 !important; background: white !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  .barra-superior, .ayuda-rapida, .pie-ayuda { display: none !important; }
+  .area-trabajo, .zona-desplazamiento {
+    display: block !important;
+    width: 900mm !important; height: 1200mm !important;
+    margin: 0 !important; padding: 0 !important;
+    border: none !important; border-radius: 0 !important;
+    background: transparent !important; overflow: visible !important;
+    box-shadow: none !important; min-height: 0 !important;
+  }
+  .cartel {
+    width: 900mm !important; height: 1200mm !important;
+    margin: 0 !important; max-width: none !important;
+    box-shadow: none !important;
+    page-break-inside: avoid; break-inside: avoid;
+  }
+  .campo-editable { display: none !important; }
+  .texto-impresion {
+    visibility: visible !important;
+    font-size: var(--fuente-impresion) !important;
+    border: none !important; background: transparent !important;
+    overflow: hidden !important;
+  }
+}
+
+/* La URL determina la vertical; no existe selector manual. */
+
+
+/* Exportación PDF: mostrar la versión de impresión, no las cajas de edición. */
+.cartel.exportando-pdf {
+  box-shadow: none !important;
+  background: #fff !important;
+}
+.cartel.exportando-pdf .campo-editable {
+  display: none !important;
+}
+.cartel.exportando-pdf .texto-impresion {
+  visibility: visible !important;
+  font-size: var(--fuente-impresion, inherit) !important;
+  border: none !important;
+  background: transparent !important;
+  overflow: hidden !important;
+}
+
+
+/* ================================================================
+   IMÁGENES – fase 1: texto e imagen en sectores separados.
+   Los sectores no pueden abandonar su sección de contenido.
+   ================================================================ */
+.figura-cartel {
+  position: absolute;
+  z-index: 3;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 0.2%;
+  min-width: 0;
+  min-height: 0;
+  margin: 0;
+  padding: 0.14%;
+  overflow: hidden;
+  background: #fff;
+  border: 1px dashed #7fa7d1;
+  cursor: pointer;
+}
+.figura-cartel:hover, .figura-cartel:focus {
+  outline: 2px solid #2269b4;
+  outline-offset: -2px;
+}
+.figura-cartel img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+  flex: 1 1 auto;
+  object-fit: contain;
+  user-select: none;
+}
+.figura-cartel figcaption {
+  flex: 0 0 auto;
+  max-height: 27%;
+  overflow: hidden;
+  text-align: center;
+  color: #283448;
+  font-size: 1.05cqw;
+  line-height: 1.2;
+  overflow-wrap: anywhere;
+}
+.figura-cartel figcaption[hidden] { display: none; }
+.panel-imagenes {
+  position: fixed;
+  z-index: 110;
+  top: 82px;
+  right: 18px;
+  width: min(340px, calc(100vw - 32px));
+  max-height: calc(100vh - 98px);
+  overflow: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 18px;
+  border: 1px solid #cbd5e2;
+  border-radius: 12px;
+  box-shadow: 0 12px 36px #1d2d4433;
+  background: white;
+  color: #253247;
+  font-size: 13px;
+}
+.panel-imagenes[hidden] { display: none !important; }
+.panel-imagenes-cabecera { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.panel-imagenes-cabecera strong { font-size: 16px; }
+.panel-imagenes-ayuda { margin: 0; font-size: 12px; line-height: 1.55; color: #58687c; }
+.panel-imagenes label { font-weight: 600; }
+.entrada-imagen { width: 100%; min-height: 37px; padding: 7px 9px; border: 1px solid #cbd5e2; border-radius: 7px; background: white; color: #253247; }
+input[type=range].entrada-imagen { padding: 0; accent-color: var(--rojo-uvm); }
+.panel-imagenes .boton { align-self: stretch; }
+.panel-imagenes .boton-icono { align-self: auto; }
+.boton-peligro { color: #ab1928; border-color: #e0b9bf; }
+.boton-peligro:disabled { opacity: 0.4; cursor: default; }
+.imagen-estado { margin: 1px 0 0; min-height: 20px; font-size: 12px; line-height: 1.4; color: #286449; }
+.imagen-estado.mensaje-advertencia { color: #a32630; }
+@media print {
+  .panel-imagenes { display: none !important; }
+  .figura-cartel { border: 0 !important; padding: 0 !important; box-shadow: none !important; outline: 0 !important; }
+}
+.cartel.exportando-pdf .figura-cartel { border: none !important; padding: 0 !important; box-shadow: none !important; outline: none !important; }
+
+
+/* ==============================================================
+   ETAPA 2 — Panel lateral acoplado y cuadrículas de figuras.
+   No se modifican los límites de los campos ni el diseño base SVG.
+   ============================================================== */
+.area-trabajo {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  column-gap: 16px;
+  row-gap: 12px;
+  align-items: start;
+}
+.ayuda-rapida { grid-column: 1 / -1; grid-row: 1; width: 100%; max-width: 100%; margin: 0; }
+.zona-desplazamiento { grid-column: 1; grid-row: 2; min-width: 0; }
+.pie-ayuda { grid-column: 1 / -1; grid-row: 3; width: 100%; max-width: 100%; margin: 0; }
+.panel-imagenes {
+  position: sticky;
+  top: 12px;
+  right: auto;
+  z-index: 8;
+  grid-column: 2;
+  grid-row: 2;
+  align-self: start;
+  width: 100%;
+  max-width: 100%;
+  max-height: calc(100vh - 28px);
+  box-shadow: 0 4px 16px #1d2d441f;
+  overflow-x: hidden;
+  overflow-y: auto;
+}
+.area-trabajo.panel-abierto { grid-template-columns: minmax(0, 1fr) minmax(300px, 340px); }
+.imagen-acciones { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+.imagen-acciones .boton { flex: 1 1 165px; }
+.imagen-contador { font-size: 11px; color: #596982; }
+.figura-control { display: flex; gap: 6px; min-width: 0; }
+.figura-control select { flex: 1 1 auto; min-width: 0; }
+.figura-control .boton-icono { flex: 0 0 auto; }
+.panel-imagenes .boton:disabled { opacity: .45; cursor: not-allowed; }
+.galeria-cartel {
+  position: absolute;
+  z-index: 3;
+  display: grid;
+  gap: 0.35%;
+  min-width: 0;
+  min-height: 0;
+  overflow: hidden;
+  align-content: stretch;
+  background: white;
+}
+.galeria-cartel[hidden] { display: none !important; }
+.galeria-cartel .figura-cartel {
+  position: relative;
+  inset: auto;
+  width: 100%;
+  height: 100%;
+  min-width: 0;
+  min-height: 0;
+  padding: 0.5%;
+  display: flex;
+  overflow: hidden;
+}
+.galeria-cartel .figura-cartel img { min-height: 0; min-width: 0; object-fit: contain; }
+.galeria-cartel .figura-cartel figcaption { max-height: 30%; font-size: 0.95cqw; }
+.galeria-cartel .figura-cartel.figura-seleccionada { outline: 2px solid #2269b4; outline-offset: -2px; }
+.cartel.exportando-pdf .galeria-cartel .figura-cartel,
+.cartel.exportando-pdf .galeria-cartel .figura-cartel.figura-seleccionada { outline: 0 !important; border: 0 !important; }
+@media (max-width: 1030px) {
+  .area-trabajo.panel-abierto { grid-template-columns: minmax(0, 1fr); }
+  .panel-imagenes { position: static; grid-column: 1; grid-row: 2; max-height: none; }
+  .zona-desplazamiento { grid-row: 3; }
+  .pie-ayuda { grid-row: 4; }
+}
+@media print {
+  .area-trabajo, .area-trabajo.panel-abierto {
+    display: block !important;
+    width: 900mm !important;
+    height: 1200mm !important;
+  }
+  .galeria-cartel .figura-cartel, .galeria-cartel .figura-cartel.figura-seleccionada {
+    border: 0 !important;
+    outline: 0 !important;
+    cursor: default !important;
+  }
+}
+
+/* Las dos plantillas PDF nuevas ya contienen su rotulación y barras oficiales.
+   Ocultamos únicamente las superposiciones del SVG genérico para evitar
+   barras duplicadas. Las cajas y galerías siguen funcionando igual. */
+.cartel[data-formato-especial] .nombre-vertical,
+.cartel[data-formato-especial] .encabezado-seccion {
+  display: none !important;
+}
