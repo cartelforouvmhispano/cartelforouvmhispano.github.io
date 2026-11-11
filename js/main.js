@@ -3,14 +3,9 @@
   'use strict';
   try {
     let isSafari = /constructor/i.test(window.HTMLElement) || (function (p) { return p.toString() === "[object SafariRemoteNotification]"; })(!window['safari'] || (typeof safari !== 'undefined' && safari.pushNotification));
-
     if (isSafari) {
-	// Detecta si está usando Safari, y si es de móvil o de escritorio.
-	let isMobileApple = /iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
-
-	if (!isMobileApple) {
-	  window.location.href = "/safari-not-supported.html";
-	}
+      // Detecta si está usando Safari
+      window.location.href = "/safari-not-supported.html";
     }
     const editor = new window.CartelUVM.EditorCartel();
     editor.iniciar();
