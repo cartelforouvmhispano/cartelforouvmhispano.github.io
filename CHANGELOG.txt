@@ -1,3 +1,7 @@
+2026-11-11:
+  Committer: Autumn64
+    - Cambio a librerías descargadas localmente para solucionar bloqueos de red causados por los CDN de las librerías remotas.
+
 2026-11-10:
   Committer: Autumn64
     - Deploy de página web a producción.
