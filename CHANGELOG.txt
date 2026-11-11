@@ -1,0 +1,4 @@
+2026-11-10:
+  Committer: Autumn64
+    - Deploy de página web a producción.
+    - Adición de mensajes para nuevos usuarios así como para usuarios que intenten acceder desde un dispositivo móvil.
